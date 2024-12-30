@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная</title>
+</head>
+<body>
+    <h1>Добро пожаловать!</h1>
+    {% if user.is_authenticated %}
+        <p>Привет, {{ user.username }}! Вы вошли как {{ user.get_user_type_display }}.</p>
+        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" style="background: none; border: none; padding: 0; color: blue; text-decoration: underline; cursor: pointer;">
+                Выйти
+            </button>
+        </form>
+    {% else %}
+        <p>Вы не авторизованы. <a href="{% url 'login' %}">Войти</a> или <a href="{% url 'register' %}">Зарегистрироваться</a>.</p>
+    {% endif %}
+</body>
+</html>
