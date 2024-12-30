@@ -15,8 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from schedule_app import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('stub/', views.stub_page, name='stub_page'),
+    path('', views.home, name='home'),
+    path('register/', views.register, name='register'),
+    path('login/', auth_views.LoginView.as_view(template_name='schedule_app/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='schedule_app/logged_out.html'), name='logout'),
+    path('', include('schedule_app.urls')),
+    # Если хотите добавить профиль:
+    # path('accounts/profile/', views.profile_view, name='profile'),
 ]
