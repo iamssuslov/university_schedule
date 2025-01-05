@@ -1,22 +1,145 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная</title>
+    <title>Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+            list-style: none;
+            text-decoration: none;
+        }
+
+        body {
+            height: 100vh;
+            background: url("{% static 'images/bg_ocean.jpg' %}") no-repeat;
+            background-size: cover;
+            background-position: center;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8%;
+            box-shadow: 0 5px 10px #000;
+        }
+
+        header .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: #000;
+            transition: .5s;
+        }
+
+        header .logo:hover {
+            transform:  scale(1.2);
+        }
+
+        header nav ul li {
+            position: relative;
+            float: left;
+        }
+
+        header nav ul li a {
+            padding: 15px;
+            color:#000;
+            font-size: 16px;
+            display: block;
+        }
+
+        header nav ul li a:hover {
+            background: #000;
+            color:#fff;
+        }
+
+        .welcome {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        .welcome h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .welcome p {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .welcome form button {
+            background: none;
+            border: none;
+            padding: 0;
+            color: blue;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button {
+            background: none;
+            border: none;
+            padding: 15px;
+            color:#000;
+            font-size: 16px;
+            display: block;
+        }
+
+        button:hover {
+            background: #000;
+            color:#fff;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Добро пожаловать!</h1>
-    {% if user.is_authenticated %}
-        <p>Привет, {{ user.username }}! Вы вошли как {{ user.get_user_type_display }}.</p>
-        <form method="post" action="{% url 'logout' %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" style="background: none; border: none; padding: 0; color: blue; text-decoration: underline; cursor: pointer;">
-                Выйти
-            </button>
-        </form>
-    {% else %}
-        <p>Вы не авторизованы. <a href="{% url 'login' %}">Войти</a> или <a href="{% url 'register' %}">Зарегистрироваться</a>.</p>
-    {% endif %}
+
+    <header>
+        <a href="/" class="logo">Главная</a>
+        <nav>
+            <ul>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'schedule' %}">Расписание</a></li>
+                    <li>
+                        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-button">Выйти</button>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Авторизация</a></li>
+                    <li><a href="{% url 'register' %}">Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <div class="welcome">
+        <h1>Добро пожаловать!</h1>
+        {% if user.is_authenticated %}
+            <p>Привет, {{ user.username }}! Вы вошли как {{ user.get_user_type_display }}.</p>
+        {% else %}
+            <p>Вы не авторизованы. Пожалуйста войдите в систему.</p>
+        {% endif %}
+    </div>
+
 </body>
 </html>

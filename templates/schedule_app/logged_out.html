@@ -1,12 +1,112 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вы вышли из системы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+            list-style: none;
+            text-decoration: none;
+        }
+
+        body {
+            height: 100vh;
+            background: url("{% static 'images/bg_ocean.jpg' %}") no-repeat;
+            background-size: cover;
+            background-position: center;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8%;
+            box-shadow: 0 5px 10px #000;
+        }
+
+        header .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: #000;
+            transition: .5s;
+        }
+
+        header .logo:hover {
+            transform: scale(1.2);
+        }
+
+        header nav ul li {
+            position: relative;
+            float: left;
+        }
+
+        header nav ul li a {
+            padding: 15px;
+            color: #000;
+            font-size: 16px;
+            display: block;
+        }
+
+        header nav ul li a:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .logout-container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin-top: 100px; /* Отступ от шапки */
+        }
+
+        .logout-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .logout-container p {
+            font-size: 16px;
+        }
+
+        .logout-container p a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .logout-container p a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
+
+<header>
+    <a href="/" class="logo">Главная</a>
+    <nav>
+        <ul>
+            <li><a href="{% url 'login' %}">Авторизация</a></li>
+            <li><a href="{% url 'register' %}">Регистрация</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="logout-container">
     <h1>Вы успешно вышли из системы</h1>
-    <p><a href="{% url 'login' %}">Войти снова</a></p>
+</div>
+
 </body>
 </html>
