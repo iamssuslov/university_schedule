@@ -125,7 +125,43 @@
             background: #000;
             color:#fff;
         }
-        
+
+        .attendance-form {
+            margin-top: 10px;
+        }
+
+        .attendance-form input {
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .attendance-code {
+            font-weight: bold;
+            color: #d9534f;
+        }
+
+        /* Сообщения об успехе и ошибке */
+        .message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.info {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
     </style>
 </head>
 <body>
@@ -146,14 +182,29 @@
 
 <div class="schedule-container">
     <h2>Расписание</h2>
+    
+    <!-- Отображаем сообщения об успехе, ошибке и предупреждениях -->
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <div class="message {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% elif message.tags == 'info' %}info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
     <table>
         <tr>
             <th>Курс</th>
             <th>Дата</th>
             <th>Время</th>
             <th>Аудитория</th>
-            {% if user.user_type != 'student' %}
-                <th>Действия</th>
+            {% if user.user_type == 'student' %}
+                <th>Введите код</th>
+            {% endif %}
+            {% if user.user_type == 'teacher' %}
+                <th>Код посещаемости</th>
             {% endif %}
         </tr>
         {% for schedule in schedules %}
@@ -162,8 +213,22 @@
                 <td>{{ schedule.date }}</td>
                 <td>{{ schedule.time }}</td>
                 <td>{{ schedule.room }}</td>
-                {% if user.user_type != 'student' %}
-                    <td><a href="{% url 'mark_attendance' schedule.id %}">Отметить посещения</a></td>
+
+                {% if user.user_type == 'student' %}
+                    <td>
+                        <div class="attendance-form">
+                            <form method="POST" action="{% url 'confirm_attendance' schedule.id %}">
+                                {% csrf_token %}
+                                <label for="attendance_code">Введите код:</label>
+                                <input type="text" name="code" id="attendance_code" required>
+                                <button type="submit">Подтвердить присутствие</button>
+                            </form>
+                        </div>
+                    </td>
+                {% endif %}
+
+                {% if user.user_type == 'teacher' %}
+                    <td class="attendance-code">{{ schedule.attendance_code }}</td>
                 {% endif %}
             </tr>
         {% endfor %}
@@ -172,4 +237,3 @@
 
 </body>
 </html>
-
