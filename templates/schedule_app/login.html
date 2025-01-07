@@ -113,6 +113,13 @@
         .login-container form button:hover {
             background-color: #0056b3;
         }
+
+        .error {
+            color: red;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -131,8 +138,21 @@
     <h2>Вход</h2>
     <form method="post">
         {% csrf_token %}
+
+
         <input type="text" name="username" placeholder="Введите логин" required>
+
+
         <input type="password" name="password" placeholder="Введите пароль" required>
+
+
+        {% if form.non_field_errors %}
+            <div class="error">
+                Неправильный логин или пароль.
+            </div>
+        {% endif %}
+
+
         <button type="submit">Войти</button>
     </form>
 </div>
