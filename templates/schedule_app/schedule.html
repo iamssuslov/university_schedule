@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная</title>
     <style>
+        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -140,28 +141,13 @@
             color: #d9534f;
         }
 
-        /* Сообщения об успехе и ошибке */
-        .message {
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
+        .attendance-code.success {
+            color: #28a745;
         }
 
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
+        .attendance-code.error {
+            color: #dc3545;
         }
-
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .message.info {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-
     </style>
 </head>
 <body>
@@ -216,14 +202,20 @@
 
                 {% if user.user_type == 'student' %}
                     <td>
-                        <div class="attendance-form">
-                            <form method="POST" action="{% url 'confirm_attendance' schedule.id %}">
-                                {% csrf_token %}
-                                <label for="attendance_code">Введите код:</label>
-                                <input type="text" name="code" id="attendance_code" required>
-                                <button type="submit">Подтвердить присутствие</button>
-                            </form>
-                        </div>
+                        {% if schedule.attendance_status is None %}
+                            <div class="attendance-form">
+                                <form method="POST" action="{% url 'confirm_attendance' schedule.id %}">
+                                    {% csrf_token %}
+                                    <label for="attendance_code">Введите код:</label>
+                                    <input type="text" name="code" id="attendance_code" required>
+                                    <button type="submit">Подтвердить присутствие</button>
+                                </form>
+                            </div>
+                        {% elif schedule.attendance_status %}
+                            <span class="attendance-code success">Вы уже отметились</span>
+                        {% else %}
+                            <span class="attendance-code error">Код неверный</span>
+                        {% endif %}
                     </td>
                 {% endif %}
 

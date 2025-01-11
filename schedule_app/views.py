@@ -27,9 +27,16 @@ def register(request):
 @login_required
 def schedule_view(request):
     user: User = request.user
+    schedules = []
+
     if user.user_type == 'student':
         # Получаем расписание для студентов
         schedules = Schedule.objects.filter(course__students=request.user)
+
+        # Добавляем информацию о посещаемости в каждое расписание
+        for schedule in schedules:
+            attendance = schedule.attendance_set.filter(student=user).first()
+            schedule.attendance_status = attendance.is_present if attendance else None
     elif user.user_type == 'teacher':
         # Получаем расписание для преподавателей
         schedules = Schedule.objects.filter(course__teacher=request.user)
@@ -37,7 +44,6 @@ def schedule_view(request):
             if schedule.attendance_code is None:  # Генерация кода, если он не существует
                 schedule.generate_attendance_code()
     else:
-        # Расписание для администратора
         schedules = Schedule.objects.all()
     context = {'schedules': schedules}
     return render(request, 'schedule_app/schedule.html', context)
