@@ -26,26 +26,37 @@ def register(request):
 
 @login_required
 def schedule_view(request):
-    user: User = request.user
+    user = request.user
     schedules = []
+    attendance_attempts = {}  # Словарь для хранения количества оставшихся попыток
 
     if user.user_type == 'student':
-        # Получаем расписание для студентов
-        schedules = Schedule.objects.filter(course__students=request.user)
-
-        # Добавляем информацию о посещаемости в каждое расписание
+        schedules = Schedule.objects.filter(course__students=user)
         for schedule in schedules:
             attendance = schedule.attendance_set.filter(student=user).first()
             schedule.attendance_status = attendance.is_present if attendance else None
+
+            # Добавляем в словарь оставшиеся попытки для каждого расписания
+            session_key = f"attendance_attempts_{schedule.id}"
+            attendance_attempts[schedule.id] = request.session.get(session_key, 3)
+
     elif user.user_type == 'teacher':
-        # Получаем расписание для преподавателей
-        schedules = Schedule.objects.filter(course__teacher=request.user)
+        schedules = Schedule.objects.filter(course__teacher=user)
         for schedule in schedules:
-            if schedule.attendance_code is None:  # Генерация кода, если он не существует
+            if schedule.attendance_code is None:
                 schedule.generate_attendance_code()
-    else:
-        schedules = Schedule.objects.all()
-    context = {'schedules': schedules}
+
+    # Создаём список словарей с данными для шаблона
+    schedule_data = []
+    for schedule in schedules:
+        schedule_data.append({
+            'schedule': schedule,
+            'attendance_attempts': attendance_attempts.get(schedule.id, 3),
+        })
+
+    context = {
+        'schedule_data': schedule_data,
+    }
     return render(request, 'schedule_app/schedule.html', context)
 
 
@@ -90,32 +101,42 @@ def confirm_attendance(request, schedule_id):
     if not request.user.is_authenticated or request.user.user_type != 'student':
         return JsonResponse({'error': 'Access denied'}, status=403)
 
+    MAX_ATTEMPTS = 3  # Максимальное количество попыток ввода кода
+    session_key = f"attendance_attempts_{schedule_id}"  # Уникальный ключ для сохранения попыток
+
+    # Если это POST-запрос
     if request.method == 'POST':
         entered_code = request.POST.get('code')
-        schedule = Schedule.objects.get(id=schedule_id)
+        schedule = get_object_or_404(Schedule, id=schedule_id)
 
-        # Пытаемся найти все записи посещаемости для текущего студента и расписания
-        attendance_queryset = Attendance.objects.filter(schedule=schedule, student=request.user)
+        # Получаем количество оставшихся попыток из сессии
+        attempts = request.session.get(session_key, MAX_ATTEMPTS)
 
-        # Если запись уже существует, то обновляем ее
-        if attendance_queryset.exists():
-            attendance = attendance_queryset.first()  # Берем первую запись
-        else:
-            attendance = Attendance.objects.create(
-                schedule=schedule,
-                student=request.user
-            )
+        # Пытаемся найти запись посещаемости для текущего студента
+        attendance, created = Attendance.objects.get_or_create(schedule=schedule, student=request.user)
 
-        # Проверяем, была ли уже отмечена посещаемость
         if attendance.is_present:
-            messages.info(request, "Вы уже отметили присутствие на это занятие.")
-        elif entered_code == schedule.attendance_code:
-            # Если код правильный, отмечаем посещаемость
-            attendance.is_present = True
-            attendance.confirmed_at = now()  # сохраняем время подтверждения
-            attendance.save()
-            messages.success(request, "Присутствие успешно подтверждено.")
+            # Если уже отмечено присутствие
+            messages.info(request, "Вы уже подтвердили присутствие на это занятие.")
+        elif attempts > 0:
+            # Проверяем введенный код
+            if entered_code == schedule.attendance_code:
+                # Код правильный, отмечаем присутствие
+                attendance.is_present = True
+                attendance.confirmed_at = now()  # сохраняем время подтверждения
+                attendance.save()
+                messages.success(request, "Присутствие успешно подтверждено.")
+            else:
+                # Код неправильный, уменьшаем количество попыток
+                attempts -= 1
+                request.session[session_key] = attempts  # Обновляем количество попыток в сессии
+
+                if attempts > 0:
+                    messages.error(request, f"Неверный код. Осталось попыток: {attempts}.")
+                else:
+                    messages.error(request, "Попытки ввода исчерпаны. Вы больше не можете вводить код.")
         else:
-            messages.error(request, "Неверный код. Попробуйте еще раз.")
-    
-    return redirect('schedule')  # Перенаправляем на страницу расписания
+            # Если попытки исчерпаны
+            messages.error(request, "Вы больше не можете вводить код. Попытки исчерпаны.")
+
+    return redirect('schedule')
