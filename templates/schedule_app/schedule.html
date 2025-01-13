@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная</title>
     <style>
+        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -140,28 +141,13 @@
             color: #d9534f;
         }
 
-        /* Сообщения об успехе и ошибке */
-        .message {
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
+        .attendance-code.success {
+            color: #28a745;
         }
 
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
+        .attendance-code.error {
+            color: #dc3545;
         }
-
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .message.info {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-
     </style>
 </head>
 <body>
@@ -207,32 +193,57 @@
                 <th>Код посещаемости</th>
             {% endif %}
         </tr>
-        {% for schedule in schedules %}
+        {% for item in schedule_data %}
             <tr>
-                <td>{{ schedule.course.name }}</td>
-                <td>{{ schedule.date }}</td>
-                <td>{{ schedule.time }}</td>
-                <td>{{ schedule.room }}</td>
-
+                <td>{{ item.schedule.course.name }}</td>
+                <td>{{ item.schedule.date }}</td>
+                <td>{{ item.schedule.time }}</td>
+                <td>{{ item.schedule.room }}</td>
+    
                 {% if user.user_type == 'student' %}
-                    <td>
-                        <div class="attendance-form">
-                            <form method="POST" action="{% url 'confirm_attendance' schedule.id %}">
-                                {% csrf_token %}
-                                <label for="attendance_code">Введите код:</label>
-                                <input type="text" name="code" id="attendance_code" required>
-                                <button type="submit">Подтвердить присутствие</button>
-                            </form>
-                        </div>
-                    </td>
+                <td>
+                    {% if item.schedule.attendance_status is None %}
+                        {% if item.attendance_attempts > 0 %}
+                            <div class="attendance-form">
+                                <form method="POST" action="{% url 'confirm_attendance' item.schedule.id %}">
+                                    {% csrf_token %}
+                                    <label for="attendance_code">Введите код:</label>
+                                    <input type="text" name="code" id="attendance_code" required>
+                                    <button type="submit">Подтвердить присутствие</button>
+                                </form>
+                                <p class="info">Осталось попыток: {{ item.attendance_attempts }}</p>
+                            </div>
+                        {% else %}
+                            <span class="attendance-code error">Попытки исчерпаны. Вы больше не можете вводить код.</span>
+                        {% endif %}
+                    {% elif item.schedule.attendance_status %}
+                        <span class="attendance-code success">Вы уже отметились</span>
+                    {% else %}
+                        {% if item.attendance_attempts > 0 %}
+                            <div class="attendance-form">
+                                <form method="POST" action="{% url 'confirm_attendance' item.schedule.id %}">
+                                    {% csrf_token %}
+                                    <label for="attendance_code">Введите код:</label>
+                                    <input type="text" name="code" id="attendance_code" required>
+                                    <button type="submit">Подтвердить присутствие</button>
+                                </form>
+                                <p class="info">Осталось попыток: {{ item.attendance_attempts }}</p>
+                            </div>
+                        {% else %}
+                            <span class="attendance-code error">Попытки исчерпаны. Вы больше не можете вводить код.</span>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                
                 {% endif %}
-
+    
                 {% if user.user_type == 'teacher' %}
-                    <td class="attendance-code">{{ schedule.attendance_code }}</td>
+                    <td class="attendance-code">{{ item.schedule.attendance_code }}</td>
                 {% endif %}
             </tr>
         {% endfor %}
     </table>
+    
 </div>
 
 </body>
