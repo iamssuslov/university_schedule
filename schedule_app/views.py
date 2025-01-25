@@ -31,7 +31,9 @@ def schedule_view(request):
     attendance_attempts = {}  # Словарь для хранения количества оставшихся попыток
 
     if user.user_type == 'student':
-        schedules = Schedule.objects.filter(course__students=user)
+
+        schedules = Schedule.objects.filter(course__students=user, date__gte=now().date()).order_by('date', 'time')
+
         for schedule in schedules:
             attendance = schedule.attendance_set.filter(student=user).first()
             schedule.attendance_status = attendance.is_present if attendance else None
@@ -41,7 +43,9 @@ def schedule_view(request):
             attendance_attempts[schedule.id] = request.session.get(session_key, 3)
 
     elif user.user_type == 'teacher':
-        schedules = Schedule.objects.filter(course__teacher=user)
+
+        schedules = Schedule.objects.filter(course__teacher=user, date__gte=now().date()).order_by('date', 'time')
+
         for schedule in schedules:
             if schedule.attendance_code is None:
                 schedule.generate_attendance_code()
